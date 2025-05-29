@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Basketball Matches</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin: 50px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .match-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .match-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+        }
+
+        .match-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .league-info {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .match-status {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .teams-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+
+        .team {
+            text-align: center;
+            flex: 1;
+        }
+
+        .team-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .team-city {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .vs-divider {
+            margin: 0 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .match-datetime {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .date {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .error {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            color: #d32f2f;
+            font-size: 1.1rem;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+
+        .api-info {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 40px;
+            color: white;
+            text-align: center;
+        }
+
+        .api-info h3 {
+            margin-bottom: 10px;
+        }
+
+        .api-info a {
+            color: #ffeb3b;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-info a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .matches-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .teams-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .vs-divider {
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏀 Upcoming Basketball Matches</h1>
+            <p>Stay updated with the latest NBA games</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading upcoming matches...</p>
+        </div>
+
+        <div id="matches-container" class="matches-grid" style="display: none;"></div>
+
+        <div class="api-info">
+            <h3>🔗 API Information</h3>
+            <p>Data provided by: <a href="https://api-sports.io/" target="_blank">API-Sports.io</a></p>
+            <p>Endpoint: <code>https://api-basketball-beta.p.rapidapi.com/games</code></p>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'demo'; 
+        const API_HOST = 'api-basketball-beta.p.rapidapi.com';
+        const API_URL = 'https://api-basketball-beta.p.rapidapi.com/games';
+
+        const today = new Date();
+        const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+        
+        const formatDate = (date) => {
+            return date.toISOString().split('T')[0];
+        };
+
+        async function fetchUpcomingMatches() {
+            try {
+                const response = await fetch(`${API_URL}?league=12&season=2024-2025&from=${formatDate(today)}&to=${formatDate(nextWeek)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-RapidAPI-Key': API_KEY,
+                        'X-RapidAPI-Host': API_HOST
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.response || [];
+            } catch (error) {
+                console.error('Error fetching matches:', error);
+                return getDemoMatches();
+            }
+        }
+
+        function getDemoMatches() {
+            const demoDate = new Date();
+            return [
+                {
+                    teams: {
+                        home: { name: "Lakers", code: "LAL" },
+                        away: { name: "Warriors", code: "GSW" }
+                    },
+                    date: demoDate.toISOString(),
+                    league: { name: "NBA" },
+                    status: { long: "Not Started" }
+                },
+                {
+                    teams: {
+                        home: { name: "Celtics", code: "BOS" },
+                        away: { name: "Heat", code: "MIA" }
+                    },
+                    date: new Date(demoDate.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+                    league: { name: "NBA" },
+                    status: { long: "Not Started" }
+                },
+                {
+                    teams: {
+                        home: { name: "Bulls", code: "CHI" },
+                        away: { name: "Knicks", code: "NYK" }
+                    },
+                    date: new Date(demoDate.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+                    league: { name: "NBA" },
+                    status: { long: "Not Started" }
+                }
+            ];
+        }
+
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const options = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const timeOptions = {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZoneName: 'short'
+            };
+            
+            return {
+                date: date.toLocaleDateString('en-US', options),
+                time: date.toLocaleTimeString('en-US', timeOptions)
+            };
+        }
+
+        function createMatchCard(match) {
+            const datetime = formatDateTime(match.date);
+            
+            return `
+                <div class="match-card">
+                    <div class="match-header">
+                        <div class="league-info">${match.league?.name || 'NBA'}</div>
+                        <div class="match-status">${match.status?.long || 'Scheduled'}</div>
+                    </div>
+                    
+                    <div class="teams-container">
+                        <div class="team">
+                            <div class="team-name">${match.teams.away.name}</div>
+                            <div class="team-city">${match.teams.away.code || ''}</div>
+                        </div>
+                        
+                        <div class="vs-divider">VS</div>
+                        
+                        <div class="team">
+                            <div class="team-name">${match.teams.home.name}</div>
+                            <div class="team-city">${match.teams.home.code || ''}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="match-datetime">
+                        <div class="date">${datetime.date}</div>
+                        <div class="time">${datetime.time}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function displayMatches() {
+            const loadingElement = document.getElementById('loading');
+            const matchesContainer = document.getElementById('matches-container');
+            
+            try {
+                const matches = await fetchUpcomingMatches();
+                
+                loadingElement.style.display = 'none';
+                matchesContainer.style.display = 'grid';
+                
+                if (matches.length === 0) {
+                    matchesContainer.innerHTML = `
+                        <div class="error">
+                            <h3>No upcoming matches found</h3>
+                            <p>Check back later for updated schedules!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                matchesContainer.innerHTML = matches.map(createMatchCard).join('');
+                
+            } catch (error) {
+                loadingElement.style.display = 'none';
+                matchesContainer.style.display = 'block';
+                matchesContainer.innerHTML = `
+                    <div class="error">
+                        <h3>Error loading matches</h3>
+                        <p>Unable to fetch upcoming matches. Please try again later.</p>
+                        <p><small>Error: ${error.message}</small></p>
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', displayMatches);
+    </script>
+</body>
+</html>
